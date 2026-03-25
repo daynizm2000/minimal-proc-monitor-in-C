@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <ctype.h>
 #include <sys/stat.h>
 
@@ -28,19 +29,20 @@ typedef struct {
         uid_t uid;
 } procinfo_t;
 
-static int get_max(int *nums, size_t size)
+static int get_max(int count, ...)
 {
-	int max = *nums;
+		va_list ap;
+        va_start(ap, count);
 
-	if (size == 1) return max;
+        int max = 0;
+        
+        for (int i = 0; i < count; i++) {
+                int n = va_arg(ap, int);
+                if (n > max) max = n;
+        }
 
-	for (size_t i = 1; i < size; i++) {
-		if (max < nums[i]) {
-			max = nums[i];
-		}
-	}
-
-	return max;
+        va_end(ap);
+		return max;
 }
 
 static int read_file(int fd, char *buffer, size_t bufsize)
@@ -98,8 +100,7 @@ static int _Get_cpu_times(pid_t pid, ull_t *utime, ull_t *stime)
         int in_word   = 0;
         int in_quotes = 0;
 
-	int _tmp_arr[] = {STAT_UTIME_POS, STAT_STIME_POS};
-	const int last = get_max(_tmp_arr, sizeof(_tmp_arr) / sizeof(*_tmp_arr));
+	const int last = get_max(2, STAT_UTIME_POS, STAT_STIME_POS);
 
         for (size_t i = 0; buffer[i]; i++) {
                 if (isspace(buffer[i])) {
